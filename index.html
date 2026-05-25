@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>児童成績診断システム</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>児童成績診断システム</h1>
+        <form id="diagnosisForm">
+            <div class="input-group">
+                <label for="studentName">児童名:</label>
+                <input type="text" id="studentName" required placeholder="例：山田 太郎">
+            </div>
+
+            <div class="scores-grid">
+                <div class="input-group">
+                    <label for="japanese">国語 (0-100):</label>
+                    <input type="number" id="japanese" min="0" max="100" required>
+                </div>
+                <div class="input-group">
+                    <label for="math">算数 (0-100):</label>
+                    <input type="number" id="math" min="0" max="100" required>
+                </div>
+                <div class="input-group">
+                    <label for="science">理科 (0-100):</label>
+                    <input type="number" id="science" min="0" max="100" required>
+                </div>
+                <div class="input-group">
+                    <label for="social">社会 (0-100):</label>
+                    <input type="number" id="social" min="0" max="100" required>
+                </div>
+            </div>
+
+            <button type="submit" id="generateBtn">診断文を生成する</button>
+        </form>
+
+        <div id="resultArea" class="result-area hidden">
+            <h2>診断結果</h2>
+            <div id="diagnosisOutput" class="diagnosis-text"></div>
+            <button onclick="window.print()" class="print-btn">印刷する / PDF保存</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
