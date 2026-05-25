@@ -1,48 +1,154 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>児童成績診断システム</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個人成績入力 — 学習のようす診断システム</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>児童成績診断システム</h1>
-        <form id="diagnosisForm">
-            <div class="input-group">
-                <label for="studentName">児童名:</label>
-                <input type="text" id="studentName" required placeholder="例：山田 太郎">
-            </div>
-
-            <div class="scores-grid">
-                <div class="input-group">
-                    <label for="japanese">国語 (0-100):</label>
-                    <input type="number" id="japanese" min="0" max="100" required>
-                </div>
-                <div class="input-group">
-                    <label for="math">算数 (0-100):</label>
-                    <input type="number" id="math" min="0" max="100" required>
-                </div>
-                <div class="input-group">
-                    <label for="science">理科 (0-100):</label>
-                    <input type="number" id="science" min="0" max="100" required>
-                </div>
-                <div class="input-group">
-                    <label for="social">社会 (0-100):</label>
-                    <input type="number" id="social" min="0" max="100" required>
-                </div>
-            </div>
-
-            <button type="submit" id="generateBtn">診断文を生成する</button>
-        </form>
-
-        <div id="resultArea" class="result-area hidden">
-            <h2>診断結果</h2>
-            <div id="diagnosisOutput" class="diagnosis-text"></div>
-            <button onclick="window.print()" class="print-btn">印刷する / PDF保存</button>
-        </div>
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <h1>個人成績入力</h1>
+      <div class="sub">学習のようす — 個人分析診断文 生成システム</div>
     </div>
-    <script src="script.js"></script>
+    <div class="stamp">入力モード：単元別 ＋ 観点別<br>自動診断プレビュー連動</div>
+  </header>
+
+  <div class="layout">
+    <!-- LEFT: form -->
+    <div>
+      <!-- 1. 児童・基本設定 -->
+      <section class="card">
+        <div class="card-head">
+          <span class="num">1</span>
+          <h2>児童・基本設定</h2>
+          <span class="hint">ここの選択で下の入力項目が変わります</span>
+        </div>
+        <div class="card-body">
+          <div class="grid cols-3">
+            <label class="field">
+              <span class="lbl">児童氏名</span>
+              <input type="text" id="studentName" value="日本 太郎">
+            </label>
+            <label class="field">
+              <span class="lbl">学年</span>
+              <div class="selectwrap">
+                <select id="grade">
+                  <option value="1">1年</option>
+                  <option value="2">2年</option>
+                  <option value="3">3年</option>
+                  <option value="4">4年</option>
+                  <option value="5" selected>5年</option>
+                  <option value="6">6年</option>
+                </select>
+              </div>
+            </label>
+            <label class="field">
+              <span class="lbl">学期制</span>
+              <div class="selectwrap">
+                <select id="termType">
+                  <option value="3term" selected>3学期制</option>
+                  <option value="2term">2学期制</option>
+                  <option value="2termHK">2学期制（前期後期）</option>
+                </select>
+              </div>
+            </label>
+          </div>
+          <div class="grid cols-3" style="margin-top:16px">
+            <label class="field">
+              <span class="lbl">教科</span>
+              <div class="selectwrap">
+                <select id="subject">
+                  <option value="国語">国語</option>
+                  <option value="算数" selected>算数</option>
+                  <option value="理科">理科</option>
+                  <option value="社会">社会</option>
+                  <option value="外国語">外国語（英語）</option>
+                </select>
+              </div>
+            </label>
+            <label class="field">
+              <span class="lbl">対象学期</span>
+              <div class="selectwrap">
+                <select id="term"></select>
+              </div>
+            </label>
+            <label class="field" id="junkyoField">
+              <span class="lbl">使用教科書（準拠）</span>
+              <div class="selectwrap">
+                <select id="junkyo"></select>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 観点別評価 -->
+      <section class="card">
+        <div class="card-head">
+          <span class="num">2</span>
+          <h2>観点別評価</h2>
+          <span class="hint">観点別得点集計表より</span>
+        </div>
+        <div class="card-body">
+          <p class="section-note" id="kantenNote"></p>
+          <label class="field" style="margin-bottom:16px">
+            <span class="lbl">総合評価（赤枠・総評に使用）</span>
+            <div class="abc" id="sogoAbc">
+              <button type="button" data-g="A">A</button>
+              <button type="button" data-g="B">B</button>
+              <button type="button" data-g="C">C</button>
+            </div>
+          </label>
+          <table class="eval-table">
+            <thead><tr><th>観点</th><th>評価</th></tr></thead>
+            <tbody id="kantenRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. 単元別評価 -->
+      <section class="card" id="unitCard">
+        <div class="card-head">
+          <span class="num">3</span>
+          <h2>単元別評価</h2>
+          <span class="hint">単元別得点集計表より</span>
+        </div>
+        <div class="card-body">
+          <p class="section-note" id="unitNote"></p>
+          <table class="eval-table">
+            <thead>
+              <tr>
+                <th>単元 ／ めあて</th>
+                <th style="width:120px">評価</th>
+                <th class="reach">到達度%</th>
+              </tr>
+            </thead>
+            <tbody id="unitRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="button" class="btn ghost">一時保存</button>
+        <button type="button" class="btn primary" id="confirmBtn">診断文を確定して登録</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: live preview -->
+    <aside class="card preview">
+      <div class="pv-head">
+        <h2>診断文プレビュー</h2>
+        <span class="live">自動生成</span>
+      </div>
+      <div id="pvBody"></div>
+      <div class="pv-foot" id="pvFoot"></div>
+    </aside>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
