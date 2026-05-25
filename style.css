@@ -144,17 +144,10 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
  * 3方式プレビューコンテナ
  * ===================================================================== */
 
-/* 右カラム全体：縦積みコンテナ */
+/* 右カラム全体：縦積み・高さ制限なし */
 .preview-col{
   display:flex;flex-direction:column;gap:18px;
-  position:sticky;top:24px;
-  max-height:calc(100vh - 48px);overflow-y:auto;
-  /* スクロールバーを目立たせない */
-  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
 }
-.preview-col::-webkit-scrollbar{width:5px}
-.preview-col::-webkit-scrollbar-track{background:transparent}
-.preview-col::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 
 /* 各プレビューカード */
 .pv-card{ min-width:0 }
