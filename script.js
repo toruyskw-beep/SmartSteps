@@ -496,6 +496,22 @@ async function init(){
       `<p>${e.message}<br>※ブラウザでファイルを直接開くとJSONを読めません。フォルダ内で「python3 -m http.server」等を起動し、http経由で開いてください。</p></div>`;
     return;
   }
+
+  // config.json を読んでAPIキー設定状況をヘッダーに表示
+  const statusEl = document.getElementById("apiStatus");
+  try{
+    await loadGeminiConfig();
+    if(statusEl){
+      statusEl.className = "api-status ok";
+      statusEl.innerHTML = "✅ Gemini API 設定済み";
+    }
+  }catch(e){
+    if(statusEl){
+      statusEl.className = "api-status ng";
+      statusEl.innerHTML = `⚠️ ${e.message.split("\n")[0]}`;
+    }
+  }
+
   // script-ai.js / script-rag.js から参照できるよう window に公開
   window.KANTEN_DB = KANTEN_DB;
   window.SUBJECTS  = SUBJECTS;

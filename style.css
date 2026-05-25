@@ -254,3 +254,12 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .ref-item:last-child{border-bottom:none}
 .ref-key{color:#9a7030;font-weight:700}
 .ref-text{color:var(--ink);line-height:1.5}
+
+/* API設定ステータス */
+.api-status{
+  font-size:.72rem;padding:6px 12px;border-radius:6px;
+  border:1px solid var(--line);background:var(--card);
+  color:var(--ink-soft);
+}
+.api-status.ok{border-color:#2f6d5b;background:#e3efe9;color:#2f6d5b}
+.api-status.ng{border-color:#b4493f;background:#f6e7e4;color:#b4493f}

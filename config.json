@@ -1,0 +1,5 @@
+{
+  "_comment": "Google AI Studio (https://aistudio.google.com) でAPIキーを取得し、下の gemini_api_key に貼り付けてください。",
+  "gemini_api_key": "AIzaSyB0tJDN-NoOW7Dpt1Lkw2o8Prd12915zYg",
+  "gemini_model": "gemini-2.5-flash-lite"
+}

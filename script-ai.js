@@ -1,126 +1,193 @@
 /* =====================================================================
  * 生成AI版 診断文エンジン  (script-ai.js)
  * ---------------------------------------------------------------------
- * テンプレート版 (script.js) と同じ入力・同じ出力形式を持つ。
+ * Google Gemini API（gemini-2.5-flash-lite）を使って診断文を生成する。
+ * APIキーは config.json から読み込む。
  *
  *   入力: { subjectKey, grade, term, sogo, kanten:{観点:A/B/C}, units:[{name,meate,grade}] }
- *   出力: Promise<{ red, green:[], blue }>  ※非同期（API呼び出し想定）
+ *   出力: Promise<{ red, green:[], blue }>
  *
- * 現バージョン: モック実装
- *   実際の Anthropic API 呼び出しは行わず、入力を元に
- *   「AIが生成しそうな自然文」を擬似的に生成して返す。
- *   API接続時はこのファイルの generateDiagnosisAI() 内を
- *   fetch('/api/diagnosis', ...) 等のサーバー呼び出しに置き換える。
+ * Gemini API エンドポイント:
+ *   POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={apiKey}
  *
- * 本番実装時の想定プロンプト構造:
- *   system: 小学校の通知表の学習所見を書くアシスタント
- *   user:   学年・教科・学期・観点評価・単元評価を構造化して渡す
- *   制約:   50〜80字程度・肯定的表現・保護者向けの平易な言葉
+ * config.json:
+ *   { "gemini_api_key": "YOUR_KEY", "gemini_model": "gemini-2.5-flash-lite" }
  * ===================================================================== */
 
 
 /* =====================================================================
- * 1. 擬似生成ロジック（モック）
+ * 1. config.json の読み込み
  * ===================================================================== */
 
-// 評価ABCに応じた形容詞（AI文体で使う語彙）
-const AI_ADJ = {
-  A: ["大変よく", "意欲的に", "着実に", "しっかりと"],
-  B: ["おおむね", "だいたい", "ほぼ問題なく", "少しずつ"],
-  C: ["これから", "引き続き", "さらに", "もう少し"]
-};
+let _geminiConfig = null;   // { gemini_api_key, gemini_model }
 
-// 評価ABCに応じた締めくくり（AI文体）
-const AI_CLOSE = {
-  A: "今後のさらなる成長が期待されます。",
-  B: "引き続き取り組んでいきましょう。",
-  C: "一歩ずつ丁夫に取り組んでいきましょう。"
-};
-
-// ランダムに語彙を選ぶ（モックの多様性演出）
-function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
-
-// 総評（赤枠）の生成
-function buildRedAI(input){
-  if(!input.sogo) return "（総合評価を選択してください）";
-  const subjectLabel = window.SUBJECTS?.[input.subjectKey]?.label || "この教科";
-  const termLabel = isYearAI(input.term) ? `${input.grade}年間` : `${input.term}`;
-  const adj = pick(AI_ADJ[input.sogo]);
-  const close = AI_CLOSE[input.sogo];
-  if(input.sogo === "A"){
-    return `${termLabel}を通じて，${subjectLabel}の学習に${adj}取り組み，大きな成果を上げることができました。${close}`;
-  }else if(input.sogo === "B"){
-    return `${termLabel}を通じて，${subjectLabel}の学習に${adj}取り組むことができました。${close}`;
-  }else{
-    return `${termLabel}の${subjectLabel}の学習では，${adj}力をつけていきたいところです。${close}`;
+async function loadGeminiConfig(){
+  if(_geminiConfig) return _geminiConfig;
+  const res = await fetch("config.json");
+  if(!res.ok) throw new Error("config.json の読み込みに失敗しました。");
+  _geminiConfig = await res.json();
+  if(!_geminiConfig.gemini_api_key || _geminiConfig.gemini_api_key === "YOUR_API_KEY_HERE"){
+    throw new Error("config.json の gemini_api_key を設定してください。\nGoogle AI Studio (https://aistudio.google.com) でAPIキーを取得できます。");
   }
+  return _geminiConfig;
 }
 
-// 観点別の文（緑枠の観点部分）
-function buildKantenAI(subjectKey, grade, kanten, evalGrade){
-  const adj = pick(AI_ADJ[evalGrade]);
-  if(evalGrade === "A"){
-    return `「${kanten}」については，${adj}理解を深め，自信をもって取り組むことができています。`;
-  }else if(evalGrade === "B"){
-    return `「${kanten}」については，${adj}身についてきています。`;
-  }else{
-    return `「${kanten}」については，${adj}学び直す機会をつくっていきましょう。`;
-  }
-}
 
-// 単元別の文（緑枠の単元部分）
-function buildUnitAI(unit){
-  const adj = pick(AI_ADJ[unit.grade]);
-  if(unit.grade === "A"){
-    return `${unit.meate}について，${adj}理解することができました。`;
-  }else if(unit.grade === "B"){
-    return `${unit.meate}については，${adj}取り組めています。`;
-  }else{
-    return `${unit.meate}については，${adj}復習に取り組んでいきましょう。`;
-  }
-}
+/* =====================================================================
+ * 2. Gemini API 呼び出し
+ * ===================================================================== */
 
-// 緑枠の組み立て
-function buildGreenAI(input){
-  const lines = [];
-  const second = (input.term === "2学期" || input.term === "3学期" || input.term === "後期");
+async function callGeminiAPI(systemPrompt, userPrompt){
+  const config = await loadGeminiConfig();
+  const model  = config.gemini_model || "gemini-2.5-flash-lite";
+  const url    = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.gemini_api_key}`;
 
-  // 前学期比較（AI文体）
-  if(!isYearAI(input.term) && second){
-    lines.push({ord:"①前学期比較", text:"前学期に引き続き，着実に力をのばしています。", note:"（AI生成）"});
-  }
+  const body = {
+    system_instruction: {
+      parts: [{ text: systemPrompt }]
+    },
+    contents: [
+      { role: "user", parts: [{ text: userPrompt }] }
+    ],
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 1024
+    }
+  };
 
-  // 観点別診断文
-  const kEntries = Object.entries(input.kanten).filter(([,v]) => v);
-  const kantenOrd = (!isYearAI(input.term) && second) ? "②観点" : "①観点";
-  kEntries.forEach(([k, v]) => {
-    lines.push({ord:kantenOrd, label:k, text:buildKantenAI(input.subjectKey, input.grade, k, v)});
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
   });
 
-  // 単元別
-  if(input.subjectKey !== "kokugo"){
-    input.units.forEach(u => {
-      if(!u.grade) return;
-      lines.push({ord:"単元", label:u.name || "", text:buildUnitAI(u)});
-    });
+  if(!res.ok){
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || res.statusText;
+    throw new Error(`Gemini API エラー (${res.status}): ${msg}`);
   }
-  return lines;
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!text) throw new Error("Gemini API から応答テキストを取得できませんでした。");
+  return text.trim();
 }
 
-function isYearAI(term){ return term === "年間"; }
 
-// 公開API：テンプレート版と同じシグネチャ（Promiseを返す）
-// モックは setTimeout で API遅延を模擬（500〜1200ms）
-function generateDiagnosisAI(input){
-  return new Promise(resolve => {
-    const delay = 500 + Math.random() * 700;
-    setTimeout(() => {
-      resolve({
-        red:   buildRedAI(input),
-        green: buildGreenAI(input),
-        blue:  "1問ごとの○×入力が必要なため、本システムでは対象外です。",
-        _meta: { mode:"ai-mock", note:"Anthropic API 接続前のモック出力" }
-      });
-    }, delay);
-  });
+/* =====================================================================
+ * 3. プロンプト構築
+ *    入力データを整理してGeminiに渡す文章を作る
+ * ===================================================================== */
+
+const SYSTEM_PROMPT = `あなたは小学校の担任教師のアシスタントです。
+通知表の「学習のようす」欄に書く個人所見文を生成します。
+
+【生成ルール】
+- 対象は保護者が読む文章です。平易でわかりやすい言葉を使ってください。
+- 肯定的・前向きな表現を基本にしてください。
+- 評価Aはよくできていることを具体的に褒める表現で。
+- 評価Bはだいたいできているが引き続き頑張るよう励ます表現で。
+- 評価Cは苦手な点に触れつつ、改善・努力を促す前向きな表現で。
+- 1つの所見文は30〜60字程度にまとめてください。
+- 体言止めは使わず、「〜できています。」「〜しましょう。」など文末を整えてください。
+- 出力はJSON形式で返してください。マークダウンのコードブロックは使わずJSONのみ返してください。`;
+
+function buildUserPrompt(input){
+  const subjectLabel = window.SUBJECTS?.[input.subjectKey]?.label || input.subjectKey;
+  const isYear = input.term === "年間";
+  const termLabel = isYear ? `${input.grade}年・年間` : `${input.grade}年・${input.term}`;
+  const gradeMap = {A:"よくできている", B:"だいたいできている", C:"もう少し"};
+
+  // 観点評価
+  const kantenLines = Object.entries(input.kanten)
+    .filter(([,v]) => v)
+    .map(([k, v]) => `  - ${k}：${gradeMap[v]}（${v}）`)
+    .join("\n");
+
+  // 単元評価（算理社英）
+  const unitLines = input.units
+    .filter(u => u.grade)
+    .map(u => `  - ${u.name}（めあて：${u.meate}）：${gradeMap[u.grade]}（${u.grade}）`)
+    .join("\n");
+
+  const prompt = `
+【対象児童の評価データ】
+教科：${subjectLabel}
+学年・学期：${termLabel}
+総合評価：${input.sogo ? gradeMap[input.sogo]+"（"+input.sogo+"）" : "未入力"}
+
+【観点別評価】
+${kantenLines || "（未入力）"}
+
+${input.subjectKey !== "kokugo" ? `【単元別評価】\n${unitLines || "（未入力）"}` : ""}
+
+【出力形式】
+以下のJSON形式で返してください：
+{
+  "red": "総評の文（総合評価に基づく30〜50字）",
+  "green": [
+    {"ord": "①観点", "label": "観点名", "text": "その観点の所見文"},
+    ...
+    {"ord": "単元", "label": "単元名", "text": "その単元の所見文"}
+  ]
+}
+`.trim();
+
+  return prompt;
+}
+
+
+/* =====================================================================
+ * 4. APIレスポンスのパース
+ *    GeminiのJSON出力を {red, green[], blue} に変換する
+ * ===================================================================== */
+
+function parseGeminiResponse(text, input){
+  // JSONを抽出（コードブロックが含まれる場合も対応）
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if(!jsonMatch) throw new Error("AIの応答からJSONを取得できませんでした。\n応答内容：" + text.slice(0, 200));
+
+  let parsed;
+  try{
+    parsed = JSON.parse(jsonMatch[0]);
+  }catch(e){
+    throw new Error("AIの応答のJSONパースに失敗しました：" + e.message);
+  }
+
+  // red
+  const red = parsed.red || "（総評の生成に失敗しました）";
+
+  // green：APIが返した行をそのまま使う（足りない場合はフォールバック）
+  const green = Array.isArray(parsed.green) ? parsed.green : [];
+
+  return {
+    red,
+    green,
+    blue: "1問ごとの○×入力が必要なため、本システムでは対象外です。",
+    _meta: { mode:"gemini", model: _geminiConfig?.gemini_model }
+  };
+}
+
+
+/* =====================================================================
+ * 5. 公開API
+ *    テンプレート版 generateDiagnosis() と同じシグネチャ
+ * ===================================================================== */
+
+async function generateDiagnosisAI(input){
+  const systemPrompt = SYSTEM_PROMPT;
+  const userPrompt   = buildUserPrompt(input);
+
+  try{
+    const text   = await callGeminiAPI(systemPrompt, userPrompt);
+    return parseGeminiResponse(text, input);
+  }catch(e){
+    // エラーを診断文形式で返す（画面にエラー内容を表示）
+    return {
+      red:   `⚠️ AI生成エラー：${e.message}`,
+      green: [],
+      blue:  "1問ごとの○×入力が必要なため、本システムでは対象外です。",
+      _meta: { mode:"gemini", error: e.message }
+    };
+  }
 }
