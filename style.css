@@ -102,8 +102,6 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .abc button.on[data-g=B]{background:var(--gradeB);border-color:var(--gradeB);color:#fff}
 .abc button.on[data-g=C]{background:var(--gradeC);border-color:var(--gradeC);color:#fff}
 
-.reach{width:78px;text-align:center}
-.reach input{text-align:center;padding:6px 4px}
 
 .section-note{
   font-size:.76rem;color:var(--ink-soft);background:#faf8f3;border:1px dashed var(--line);

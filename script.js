@@ -62,7 +62,8 @@ const UNIT_LEARN = {
   C:"について，よく復習しましょう。"
 };
 
-// 「最も到達度の低い単元」テンプレート（仕様書 5.1）
+// 「最も到達度の低い単元」テンプレート（仕様書 5.1：観点別診断文で使用）
+// ※この単元別画面では未使用。観点別画面を実装する際に到達度入力とあわせて使う。
 const WORST_UNIT = {
   full:"が，とてもよくわかっています。",   // 到達度100%
   A:"を，もう一度見直しましょう。",
@@ -139,11 +140,13 @@ function buildRed(input){
 }
 
 // 観点ごとに最も到達度の低い単元の文（仕様書 5.1：観点別診断文で使用）
-// ※単元別「学習のようす」では使わない。観点別画面を実装する際に流用する。
+// ※この単元別画面では未使用。観点別画面を実装する際に流用する想定。
+//   その際は単元入力に到達度(reach)欄を再度設け、u.reach を渡すこと。
 function worstUnitSentence(input){
   const valid = input.units.map((u,idx)=>({...u,idx})).filter(u=>u.grade);
   if(valid.length === 0) return null;
 
+  // 到達度100%の単元は専用文（観点別画面で到達度を入力する場合に有効）
   const full = valid.find(u => String(u.reach) === "100");
   if(full){
     return UNITS[input.subjectKey][full.idx].meate + WORST_UNIT.full;
@@ -289,8 +292,8 @@ function rebuildForm(){
   }else{
     els.unitCard.style.display = "";
     const list = UNITS[subjectKey] || [];
-    state.units = list.map(() => ({grade:null, reach:""}));
-    $("#unitNote").innerHTML = "評価Aは「めあて＋についてはよくできています」等、<b>めあてと評価を組み合わせて</b>診断文を生成。観点ごとに<b>最も到達度の低い単元</b>も診断文に使われます。";
+    state.units = list.map(() => ({grade:null}));
+    $("#unitNote").innerHTML = "各単元の評価ABCに応じて、<b>めあてと評価を組み合わせた診断文</b>を全単元ぶん生成します（評価A＝「よくできています」など）。";
     $("#unitRows").innerHTML = list.map((u,i) => `
       <tr>
         <td>
@@ -304,7 +307,6 @@ function rebuildForm(){
             <button type="button" data-g="C">C</button>
           </div>
         </td>
-        <td class="reach"><input type="text" data-reach="${i}" placeholder="—"></td>
       </tr>`).join("");
   }
 
@@ -324,12 +326,6 @@ function bindAbcButtons(){
         else if(group.dataset.unit   !== undefined) state.units[+group.dataset.unit].grade = g;
         render();
       });
-    });
-  });
-  document.querySelectorAll("[data-reach]").forEach(inp => {
-    inp.addEventListener("input", () => {
-      state.units[+inp.dataset.reach].reach = inp.value;
-      render();
     });
   });
 }
