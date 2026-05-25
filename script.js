@@ -412,7 +412,7 @@ function buildFootText(input){
     (isYear(input.term) ? "｜年間は最大4要素を連結" : "");
 }
 
-// RAG参照根拠パネルのHTML
+// RAG参照根拠パネルのHTML（pvBody内に含める）
 function buildRefsHTML(refs){
   if(!refs || refs.length === 0) return "";
   const items = refs.map(r =>
@@ -420,7 +420,10 @@ function buildRefsHTML(refs){
        <span class="ref-key">📄 ${r.source} ／ ${r.key}</span>
        <span class="ref-text">${r.text}</span>
      </div>`).join("");
-  return `<div class="refs-list">${items}</div>`;
+  return `<div class="refs-panel">
+    <div class="refs-head">📚 参照した診断文マスタ</div>
+    <div class="refs-list">${items}</div>
+  </div>`;
 }
 
 // ローディング表示
@@ -451,19 +454,18 @@ function render(){
 
   // ── RAG版（非同期・ローディング → 結果＋参照根拠） ────────
   showLoading("pvBody-rag", "rag-color", "RAG");
-  const refsPanel = document.getElementById("refsPanel");
-  const refsList  = document.getElementById("refsList");
-  if(refsPanel) refsPanel.style.display = "none";
   generateDiagnosisRAG(input).then(result => {
     const ragBody = document.getElementById("pvBody-rag");
     const ragFoot = document.getElementById("pvFoot-rag");
-    if(ragBody) ragBody.innerHTML = buildDiagnosisHTML(result);
-    if(ragFoot) ragFoot.textContent = footText + "｜RAG生成（モック）";
-    // 参照根拠パネルを表示
-    if(result._refs && result._refs.length > 0 && refsPanel && refsList){
-      refsList.innerHTML = buildRefsHTML(result._refs);
-      refsPanel.style.display = "";
+    if(ragBody){
+      let html = buildDiagnosisHTML(result);
+      // 参照根拠パネルを pvBody 内に追加
+      if(result._refs && result._refs.length > 0){
+        html += buildRefsHTML(result._refs);
+      }
+      ragBody.innerHTML = html;
     }
+    if(ragFoot) ragFoot.textContent = footText + "｜RAG生成（モック）";
   });
 }
 

@@ -53,6 +53,21 @@ header{
   border-radius:12px;box-shadow:var(--shadow);overflow:hidden;
 }
 .card + .card{margin-top:22px}
+
+/* プレビューカードは overflow:hidden を解除し高さを内容に追従させる */
+.pv-card{
+  overflow:visible;
+  flex-shrink:0;
+  height:auto;
+  min-width:0;
+}
+/* プレビューカードの角丸はwrapperで再現 */
+.pv-card > .pv-head{
+  border-radius:11px 11px 0 0;
+}
+.pv-card > .pv-foot{
+  border-radius:0 0 11px 11px;
+}
 .card-head{
   display:flex;align-items:center;gap:10px;
   padding:14px 20px;border-bottom:1px solid var(--line-soft);
@@ -117,7 +132,12 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .pv-head .live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,109,91,.4)}70%{box-shadow:0 0 0 6px rgba(47,109,91,0)}100%{box-shadow:0 0 0 0 rgba(47,109,91,0)}}
 
-.frame{border-radius:10px;padding:13px 15px;margin:14px 16px;position:relative}
+.frame{border-radius:10px;padding:13px 15px;margin:0;position:relative}
+/* pvBody-* の内側余白でフレームを囲む */
+[id^="pvBody-"]{
+  display:flex;flex-direction:column;gap:10px;
+  padding:12px 14px 14px;
+}
 .frame .ftag{font-size:.68rem;font-weight:700;letter-spacing:.06em;display:inline-block;padding:2px 9px;border-radius:20px;margin-bottom:7px}
 .frame.red{background:var(--red-soft);border:1.5px solid var(--red)}
 .frame.red .ftag{background:var(--red);color:#fff}
@@ -150,7 +170,7 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 }
 
 /* 各プレビューカード */
-.pv-card{ min-width:0 }
+/* 各プレビューカード */
 
 /* カードヘッダー */
 .pv-head{
@@ -218,7 +238,7 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 
 /* 参照根拠パネル（RAG版専用） */
 .refs-panel{
-  margin:0 14px 12px;border:1px solid #e8d8a8;border-radius:8px;
+  margin:0;border:1px solid #e8d8a8;border-radius:8px;
   background:#fdf8ee;font-size:.75rem;overflow:hidden;
 }
 .refs-head{
