@@ -1,0 +1,501 @@
+{
+ "subject": "外国語",
+ "junkyoList": [
+  "東書",
+  "開隆",
+  "光村",
+  "教出",
+  "三省"
+ ],
+ "grades": [
+  5,
+  6
+ ],
+ "data": {
+  "東書": {
+   "5": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Unit1 Hello,friends!",
+      "meate": "名前や好きなもの・ことを伝え合おう"
+     },
+     {
+      "no": 2,
+      "name": "Unit2 Happy birthday!",
+      "meate": "誕生日やほしいものを伝え合おう"
+     },
+     {
+      "no": 3,
+      "name": "Unit3 Can you play …",
+      "meate": "できることを伝え合おう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Unit4 Who is this?",
+      "meate": "身近な人について紹介し合おう"
+     },
+     {
+      "no": 7,
+      "name": "Unit5 Let's go to the zoo.",
+      "meate": "場所をたずねたり，案内したりしよう"
+     },
+     {
+      "no": 8,
+      "name": "Unit6 At a restaurant.",
+      "meate": "注文したり，値段をたずねたりしよう"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Unit7 Welcome to Japan!",
+      "meate": "日本の素敵な場所をグループで紹介しよう"
+     },
+     {
+      "no": 12,
+      "name": "Unit8 Who is your hero?",
+      "meate": "あこがれの人について紹介し合おう"
+     }
+    ]
+   },
+   "6": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Unit1 This is me!",
+      "meate": "好きなものや宝物などについて紹介し合おう"
+     },
+     {
+      "no": 2,
+      "name": "Unit2 My Daily Schedule",
+      "meate": "日常生活について紹介し合おう"
+     },
+     {
+      "no": 3,
+      "name": "Unit3 My Weekend",
+      "meate": "週末にしたことを伝え合おう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Unit4 Let's see the world.",
+      "meate": "世界の行きたい国について紹介し合おう"
+     },
+     {
+      "no": 7,
+      "name": "Unit5 Where is it from?",
+      "meate": "世界とのつながりを考え，発表しよう"
+     },
+     {
+      "no": 8,
+      "name": "Unit6 Save the animals.",
+      "meate": "生き物のためにできることを発表し合おう"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Unit7 My Best Memory",
+      "meate": "小学校生活の一番の思い出を伝え合おう"
+     },
+     {
+      "no": 12,
+      "name": "Unit8 My Future, My Dream",
+      "meate": "中学校生活や将来の夢について伝え合おう"
+     }
+    ]
+   }
+  },
+  "開隆": {
+   "5": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 Hello,everyone.",
+      "meate": "友だちのことをもっと知ろう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 When is your …",
+      "meate": "クラスのスペシャル・カレンダーを作ろう"
+     },
+     {
+      "no": 3,
+      "name": "Lesson3 What do you …",
+      "meate": "将来の夢をかなえるための時間割を作ろう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Lesson4 I can draw …",
+      "meate": "もっと自分を知ってもらおう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 Where is the …",
+      "meate": "マイタウンを作って案内しよう"
+     },
+     {
+      "no": 8,
+      "name": "Lesson6 What would you …",
+      "meate": "ランチメニューでこん立を考えて注文しよう"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Lesson7 I love my town.",
+      "meate": "「町のすてきなところ」をしょうかいしよう"
+     },
+     {
+      "no": 12,
+      "name": "Lesson8 My Hero",
+      "meate": "クラスみんなの「ヒーロー図かん」を作ろう"
+     }
+    ]
+   },
+   "6": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 This is me.",
+      "meate": "自分について発表しよう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 Welcome to Japan.",
+      "meate": "日本のよいところをしょうかいしよう"
+     },
+     {
+      "no": 3,
+      "name": "Lesson3 What time do you…",
+      "meate": "理想の日曜日のスケジュールを伝え合おう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Lesson4 My Summer Vacation",
+      "meate": "夏休みの思い出を発表しよう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 Where do you …",
+      "meate": "行きたい国のみりょくを伝え合おう"
+     },
+     {
+      "no": 8,
+      "name": "Lesson6 My Best Memory",
+      "meate": "小学校生活の思い出アルバムを作ろう"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Lesson7 My Dream",
+      "meate": "将来の夢を語り合おう"
+     },
+     {
+      "no": 12,
+      "name": "Lesson8 My Junior High …",
+      "meate": "中学校生活でしたいことなどを伝えよう"
+     }
+    ]
+   }
+  },
+  "光村": {
+   "5": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Unit1 Hello,everyone.",
+      "meate": "めいしを作って自己紹介をすることができる"
+     },
+     {
+      "no": 2,
+      "name": "Unit2 When is your …",
+      "meate": "誕生日などをたずね合うことができる"
+     },
+     {
+      "no": 3,
+      "name": "Unit3 What subjects do …",
+      "meate": "「わたしの時間割」を発表することができる"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Unit4 He can run fast. …",
+      "meate": "できることをヒントにしたクイズを発表する"
+     },
+     {
+      "no": 7,
+      "name": "Unit5 My hero is my …",
+      "meate": "あこがれの人を紹介することができる"
+     },
+     {
+      "no": 8,
+      "name": "Unit6 Where is the …",
+      "meate": "「理想の町」を案内し合うことができる"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Unit7 What would you …",
+      "meate": "料理を考えて注文し合うことができる"
+     },
+     {
+      "no": 12,
+      "name": "Unit8 This is my town.",
+      "meate": "パンフレットを作って紹介することができる"
+     }
+    ]
+   },
+   "6": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Unit1 This is me.",
+      "meate": "自分の興味・関心を整理して自己紹介をする"
+     },
+     {
+      "no": 2,
+      "name": "Unit2 Welcome to Japan.",
+      "meate": "日本の行事を紹介することができる"
+     },
+     {
+      "no": 3,
+      "name": "Unit3 What time do you …",
+      "meate": "ふだんの生活についてたずね合うことができる"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Unit4 My Summer Vacation",
+      "meate": "夏休みの思い出を伝え合うことができる"
+     },
+     {
+      "no": 7,
+      "name": "Unit5 We live together.",
+      "meate": "動物の気持ちを伝えるためにポスターを書く"
+     },
+     {
+      "no": 8,
+      "name": "Unit6 I want to go to …",
+      "meate": "世界の国のみりょくを紹介することができる"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Unit7 My Dream",
+      "meate": "将来について考えるために「夢宣言」をする"
+     },
+     {
+      "no": 12,
+      "name": "Unit8 My Best Memory",
+      "meate": "学校行事の出来事や感想を発表する"
+     }
+    ]
+   }
+  },
+  "教出": {
+   "5": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 Nice to meet you.",
+      "meate": "あなたのことを友達に知ってもらおう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 When is your …",
+      "meate": "たんじょう日カレンダーをつくろう"
+     },
+     {
+      "no": 3,
+      "name": "Lesson3 I have P.E. on …",
+      "meate": "夢の時間わりをつくろう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Lesson4 This is my dream…",
+      "meate": "自由な一日があったら何をしたいか伝えよう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 I can run fast.",
+      "meate": "クラスのみんなの「できること」を集めよう"
+     },
+     {
+      "no": 8,
+      "name": "Lesson6 Where do you …",
+      "meate": "いっしょに行ってみたい都道府県を伝えよう"
+     },
+     {
+      "no": 9,
+      "name": "Lesson7 I'd like pizza.",
+      "meate": "オリジナル・メニューで，ロールプレイ"
+     }
+    ],
+    "3": [
+     {
+      "no": 12,
+      "name": "Lesson8 Where is the …",
+      "meate": "目的地への行き方をうまく伝えよう"
+     },
+     {
+      "no": 13,
+      "name": "Lesson9 My Hero, My …",
+      "meate": "友達になってみたい人をしょうかいしよう"
+     }
+    ]
+   },
+   "6": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 Let's be friends.",
+      "meate": "友達のことを知って仲よくなろう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 My town is …",
+      "meate": "町のみりょくを海外の友達に伝えよう"
+     },
+     {
+      "no": 3,
+      "name": "Lesson3 Welcome to Japan.",
+      "meate": "日本のよさをしょうかいしよう"
+     }
+    ],
+    "2": [
+     {
+      "no": 6,
+      "name": "Lesson4 My Summer Vacation",
+      "meate": "夏休みにしたことを絵日記にして伝えよう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 Dream World Tour",
+      "meate": "夢の世界ツアーをしょうかいしよう"
+     },
+     {
+      "no": 8,
+      "name": "Lesson6 My Best Memory",
+      "meate": "クラスの「思い出アルバム」をつくろう"
+     },
+     {
+      "no": 9,
+      "name": "Lesson7 What do you want…",
+      "meate": "将来の夢を発表しよう"
+     }
+    ],
+    "3": [
+     {
+      "no": 12,
+      "name": "Lesson8 Junior High　…",
+      "meate": "中学校でしたいことを発表しよう"
+     }
+    ]
+   }
+  },
+  "三省": {
+   "5": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 My name is Jun.",
+      "meate": "名前や誕生日など，自分のことを伝え合おう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 I play soccer on…",
+      "meate": "好きな教科やふだんよくすることを伝えよう"
+     }
+    ],
+    "2": [
+     {
+      "no": 5,
+      "name": "Lesson3 He is my brother.",
+      "meate": "友だちや家族を紹介し合おう"
+     },
+     {
+      "no": 6,
+      "name": "Lesson4 I can jump high.",
+      "meate": "できることを伝え合おう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 She can bake …",
+      "meate": "できることや得意なことを伝え合おう"
+     }
+    ],
+    "3": [
+     {
+      "no": 11,
+      "name": "Lesson6 It is in Fukui.",
+      "meate": "場所と，そこでできることを伝え合おう"
+     },
+     {
+      "no": 12,
+      "name": "Lesson7 I want to go to …",
+      "meate": "行きたい国と，したいことを伝え合おう"
+     }
+    ]
+   },
+   "6": {
+    "1": [
+     {
+      "no": 1,
+      "name": "Lesson1 We are from India.",
+      "meate": "友だちとの共通点をさがして伝え合おう"
+     },
+     {
+      "no": 2,
+      "name": "Lesson2 We have …",
+      "meate": "日本の行事や施設・自然について伝え合おう"
+     }
+    ],
+    "2": [
+     {
+      "no": 5,
+      "name": "Lesson3 I went to the …",
+      "meate": "夏休みにしたことを伝え合おう"
+     },
+     {
+      "no": 6,
+      "name": "Lesson4 It was green.",
+      "meate": "現在と過去を比べて，変化を伝え合おう"
+     },
+     {
+      "no": 7,
+      "name": "Lesson5 We had the …",
+      "meate": "小学校の思い出を伝え合おう"
+     }
+    ],
+    "3": [
+     {
+      "no": 10,
+      "name": "Lesson6 I want to be a …",
+      "meate": "将来どんな職業につきたいかを伝え合おう"
+     },
+     {
+      "no": 11,
+      "name": "Lesson7 I want to join …",
+      "meate": "中学生になったらしたいことを伝え合おう"
+     }
+    ]
+   }
+  }
+ }
+}

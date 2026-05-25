@@ -18,37 +18,18 @@
  * 1. 設定・テンプレート（文面マスタ以外の固定ルール）
  * ===================================================================== */
 
-// 教科キー(JSONファイル名) と 表示名・準拠の対応
+// 教科キー(JSONファイル名) と 表示名の対応
+// 準拠(教科書)・単元・めあては data/meate_*.json から動的に取得する
 const SUBJECTS = {
-  "kokugo":    {label:"国語",          junkyo:[]},
-  "sansu":     {label:"算数",          junkyo:["東書","啓林","大日","学図","教出","日文"]},
-  "rika":      {label:"理科",          junkyo:["東書","啓林","大日","学図","教出","信教"]},
-  "shakai":    {label:"社会",          junkyo:["東書","教出","日文","（地域版）"]},
-  "gaikokugo": {label:"外国語（英語）", junkyo:["東書","光村","教出","開隆","三省"]}
+  "kokugo":    {label:"国語"},
+  "sansu":     {label:"算数"},
+  "rika":      {label:"理科"},
+  "shakai":    {label:"社会"},
+  "gaikokugo": {label:"外国語（英語）"}
 };
 
-// 単元マスタ（めあてシート相当・抜粋）。実運用ではこれもJSON化する。
-const UNITS = {
-  "sansu": [
-    {name:"整数と小数",            meate:"整数と小数のしくみ"},
-    {name:"体積",                  meate:"直方体や立方体の体積の求め方"},
-    {name:"比例",                  meate:"比例の意味や比例関係の表し方"},
-    {name:"小数のかけ算",          meate:"小数をかける計算"},
-    {name:"単位量あたりの大きさ",  meate:"単位量あたりの大きさと速さ"}
-  ],
-  "rika": [
-    {name:"植物の発芽",  meate:"植物が発芽する条件"},
-    {name:"天気の変化",  meate:"雲と天気の関係"}
-  ],
-  "shakai": [
-    {name:"日本の国土",  meate:"日本の地形や気候の特色"},
-    {name:"米づくり",    meate:"米づくりのさかんな地域"}
-  ],
-  "gaikokugo": [
-    {name:"Unit1 Hello",     meate:"名前や好きなものを伝え合おう"},
-    {name:"Unit2 Birthday",  meate:"誕生日やほしいものを伝え合おう"}
-  ]
-};
+// 国語以外は「めあてマスタ(JSON)」を持つ教科キー
+const MEATE_SUBJECTS = ["sansu","rika","shakai","gaikokugo"];
 
 // 総評テンプレート（仕様書 4.3）
 const SOGO_TERM = {A:"○学期の学習がよくできています。", B:"○学期の学習がだいたいできています。", C:"○学期の学習がもう少しです。"};
@@ -121,6 +102,57 @@ function kantenSentence(subjectKey, grade, kanten, evalGrade){
 }
 
 
+/* ---------------------------------------------------------------------
+ * めあて(単元)マスタ data/meate_*.json の読み込み・保持
+ *   MEATE_DB[subjectKey] = {
+ *     subject, junkyoList:[...], grades:[...],
+ *     data:{ 準拠:{ 学年:{ 学期:[ {no,name,meate,type?} ] } } }
+ *   }
+ * ------------------------------------------------------------------- */
+
+const MEATE_DB = {};
+
+async function loadMeateMaster(){
+  const entries = await Promise.all(
+    MEATE_SUBJECTS.map(async key => {
+      const res = await fetch(`data/meate_${key}.json`);
+      if(!res.ok) throw new Error(`meate_${key}.json の読み込みに失敗 (${res.status})`);
+      return [key, await res.json()];
+    })
+  );
+  entries.forEach(([key, data]) => { MEATE_DB[key] = data; });
+}
+
+// 指定教科・学年で「実際に単元が存在する準拠(教科書)」の一覧を返す
+// 社会の地域版は学年が限定されるため、データを見て学年に該当する準拠だけを出す
+function junkyoListFor(subjectKey, grade){
+  const db = MEATE_DB[subjectKey];
+  if(!db) return [];
+  const g = String(grade);
+  return db.junkyoList.filter(j => db.data[j] && db.data[j][g]);
+}
+
+// 指定教科・準拠・学年・学期の単元リストを返す（学期=年間なら全学期を連結）
+function unitsFor(subjectKey, junkyo, grade, term){
+  const db = MEATE_DB[subjectKey];
+  if(!db) return [];
+  const byGrade = db.data[junkyo] && db.data[junkyo][String(grade)];
+  if(!byGrade) return [];
+
+  if(isYear(term)){
+    // 年間：1〜3学期(または前後期)の全単元を連結
+    return Object.keys(byGrade).sort().flatMap(t => byGrade[t]);
+  }
+  return byGrade[termNumber(term)] || [];
+}
+
+// 学期ラベル("1学期"/"前期"等) → データ上の学期キー("1"/"2"/"3")
+function termNumber(term){
+  const map = {"1学期":"1","2学期":"2","3学期":"3","前期":"1","後期":"2"};
+  return map[term] || "1";
+}
+
+
 /* =====================================================================
  * 3. 診断文生成エンジン（純粋ロジック・UIに依存しない）
  *  input = { subjectKey, grade, term, sogo, kanten:{}, units:[] }
@@ -142,18 +174,19 @@ function buildRed(input){
 // 観点ごとに最も到達度の低い単元の文（仕様書 5.1：観点別診断文で使用）
 // ※この単元別画面では未使用。観点別画面を実装する際に流用する想定。
 //   その際は単元入力に到達度(reach)欄を再度設け、u.reach を渡すこと。
+//   units の各要素は {name, meate, grade, reach?} を持つ前提。
 function worstUnitSentence(input){
-  const valid = input.units.map((u,idx)=>({...u,idx})).filter(u=>u.grade);
+  const valid = input.units.filter(u => u.grade);
   if(valid.length === 0) return null;
 
   // 到達度100%の単元は専用文（観点別画面で到達度を入力する場合に有効）
   const full = valid.find(u => String(u.reach) === "100");
   if(full){
-    return UNITS[input.subjectKey][full.idx].meate + WORST_UNIT.full;
+    return (full.meate || "") + WORST_UNIT.full;
   }
   let worst = null;
   valid.forEach(u => { if(!worst || RANK[u.grade] > RANK[worst.grade]) worst = u; });
-  return UNITS[input.subjectKey][worst.idx].meate + WORST_UNIT[worst.grade];
+  return (worst.meate || "") + WORST_UNIT[worst.grade];
 }
 
 // 緑枠：学習のようす
@@ -174,16 +207,15 @@ function buildGreen(input){
   });
 
   // ③ 単元別「学習のようす」：全単元を順に出力（算理社英のみ・仕様書 4.4）
-  //    各単元の評価ABCに応じて「めあて＋接尾語」を生成する
+  //    各単元の評価ABCに応じて「めあて＋接尾語」を生成する。
+  //    units の各要素は {no, name, meate, grade} を持つ（教科書連動でセット済み）
   if(!isKokugo(input.subjectKey)){
-    const meateList = UNITS[input.subjectKey] || [];
-    input.units.forEach((u, idx) => {
-      if(!u.grade) return;                 // 未入力の単元はスキップ
-      const meate = meateList[idx] ? meateList[idx].meate : "";
+    input.units.forEach(u => {
+      if(!u.grade) return;                 // 評価未入力の単元はスキップ
       lines.push({
         ord:"単元",
-        label:(meateList[idx] ? meateList[idx].name : ""),
-        text: meate + UNIT_LEARN[u.grade]
+        label: u.name || "",
+        text: (u.meate || "") + UNIT_LEARN[u.grade]
       });
     });
   }
@@ -252,19 +284,59 @@ function rebuildTerms(){
   if(list.includes(prev)) els.term.value = prev;
 }
 
+// 準拠(教科書)セレクトを「その教科・学年で単元が存在する準拠」で構築
+function rebuildJunkyo(){
+  const subjectKey = els.subject.value;
+  if(isKokugo(subjectKey)){
+    els.junkyoField.style.display = "none";
+    return;
+  }
+  els.junkyoField.style.display = "";
+  const list = junkyoListFor(subjectKey, els.grade.value);
+  const prev = els.junkyo.value;
+  els.junkyo.innerHTML = list.map(j => `<option value="${j}">${j}</option>`).join("");
+  if(list.includes(prev)) els.junkyo.value = prev;
+}
+
+// 単元行を「教科・準拠・学年・学期」に対応した単元で再構築（算理社英のみ）
+function rebuildUnits(){
+  const subjectKey = els.subject.value;
+  if(isKokugo(subjectKey)){
+    els.unitCard.style.display = "none";
+    state.units = [];
+    return;
+  }
+  els.unitCard.style.display = "";
+  const list = unitsFor(subjectKey, els.junkyo.value, els.grade.value, els.term.value);
+  // state.units は単元情報＋評価を保持
+  state.units = list.map(u => ({no:u.no, name:u.name, meate:u.meate, grade:null}));
+
+  const termLabel = isYear(els.term.value) ? "年間" : els.term.value;
+  $("#unitNote").innerHTML = list.length
+    ? `<b>${els.junkyo.value}</b>・${els.grade.value}年・${termLabel}の単元（${list.length}件）。各単元の評価ABCに応じて<b>めあてと評価を組み合わせた診断文</b>を生成します。`
+    : "該当する単元が登録されていません。";
+
+  $("#unitRows").innerHTML = list.map((u,i) => `
+    <tr>
+      <td>
+        <div class="kanten-name">${u.name}</div>
+        <div class="unit-meate">${u.meate}</div>
+      </td>
+      <td>
+        <div class="abc" data-unit="${i}">
+          <button type="button" data-g="A">A</button>
+          <button type="button" data-g="B">B</button>
+          <button type="button" data-g="C">C</button>
+        </div>
+      </td>
+    </tr>`).join("");
+}
+
 function rebuildForm(){
   const subjectKey = els.subject.value;
 
   rebuildGrades();
-
-  // 準拠
-  if(isKokugo(subjectKey)){
-    els.junkyoField.style.display = "none";
-  }else{
-    els.junkyoField.style.display = "";
-    els.junkyo.innerHTML = SUBJECTS[subjectKey].junkyo
-      .map((j,i) => `<option ${i===0?"selected":""}>${j}</option>`).join("");
-  }
+  rebuildJunkyo();
 
   // 観点ノート
   $("#kantenNote").innerHTML = isKokugo(subjectKey)
@@ -285,30 +357,8 @@ function rebuildForm(){
       </td>
     </tr>`).join("");
 
-  // 単元カード（国語は非表示）
-  if(isKokugo(subjectKey)){
-    els.unitCard.style.display = "none";
-    state.units = [];
-  }else{
-    els.unitCard.style.display = "";
-    const list = UNITS[subjectKey] || [];
-    state.units = list.map(() => ({grade:null}));
-    $("#unitNote").innerHTML = "各単元の評価ABCに応じて、<b>めあてと評価を組み合わせた診断文</b>を全単元ぶん生成します（評価A＝「よくできています」など）。";
-    $("#unitRows").innerHTML = list.map((u,i) => `
-      <tr>
-        <td>
-          <div class="kanten-name">${u.name}</div>
-          <div class="unit-meate">${u.meate}</div>
-        </td>
-        <td>
-          <div class="abc" data-unit="${i}">
-            <button type="button" data-g="A">A</button>
-            <button type="button" data-g="B">B</button>
-            <button type="button" data-g="C">C</button>
-          </div>
-        </td>
-      </tr>`).join("");
-  }
+  // 単元行（教科書・学年・学期に連動）
+  rebuildUnits();
 
   bindAbcButtons();
   render();
@@ -364,11 +414,16 @@ function render(){
 }
 
 // ----- イベント登録 -----
+// 教科変更：フォーム全体を作り直す
 els.subject.addEventListener("change", rebuildForm);
-els.termType.addEventListener("change", () => { rebuildTerms(); render(); });
-els.grade.addEventListener("change", render);
-els.term.addEventListener("change", render);
-els.junkyo.addEventListener("change", render);
+// 学期制変更：学期セレクトを作り直し→単元（年間/学期で変わる）も更新
+els.termType.addEventListener("change", () => { rebuildTerms(); rebuildUnits(); bindAbcButtons(); render(); });
+// 学年変更：準拠(地域版は学年限定)と単元を作り直す
+els.grade.addEventListener("change", () => { rebuildJunkyo(); rebuildUnits(); bindAbcButtons(); render(); });
+// 学期変更：単元を作り直す
+els.term.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); render(); });
+// 準拠(教科書)変更：単元を作り直す
+els.junkyo.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); render(); });
 $("#confirmBtn").addEventListener("click", () => {
   const r = generateDiagnosis(collectInput());
   alert("診断文を登録しました（サンプル）。\n\n【総評】\n" + r.red +
@@ -378,7 +433,7 @@ $("#confirmBtn").addEventListener("click", () => {
 // ----- 初期化（JSON読み込み後にフォーム構築） -----
 async function init(){
   try{
-    await loadKantenMaster();
+    await Promise.all([loadKantenMaster(), loadMeateMaster()]);
   }catch(e){
     $("#pvBody").innerHTML =
       `<div class="frame red" style="margin:14px 16px"><span class="ftag">読み込みエラー</span>` +
