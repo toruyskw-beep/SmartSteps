@@ -412,7 +412,22 @@ function buildFootText(input){
     (isYear(input.term) ? "｜年間は最大4要素を連結" : "");
 }
 
-// RAG参照根拠パネルのHTML（pvBody内に含める）
+// AIプロンプトパネルのHTML（AI版コンテナ下部に表示）
+function buildPromptsHTML(prompts){
+  if(!prompts) return "";
+  const escape = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return `<div class="prompts-panel">
+    <div class="prompts-head">💬 Gemini に渡したプロンプト</div>
+    <div class="prompt-block">
+      <div class="prompt-label">🔧 システムプロンプト</div>
+      <pre class="prompt-text">${escape(prompts.system)}</pre>
+    </div>
+    <div class="prompt-block">
+      <div class="prompt-label">📋 ユーザープロンプト（評価データ）</div>
+      <pre class="prompt-text">${escape(prompts.user)}</pre>
+    </div>
+  </div>`;
+}
 function buildRefsHTML(refs){
   if(!refs || refs.length === 0) return "";
   const items = refs.map(r =>
@@ -443,13 +458,17 @@ function render(){
   if(tmplBody) tmplBody.innerHTML = buildDiagnosisHTML(tmpl);
   if(tmplFoot) tmplFoot.textContent = footText;
 
-  // ── 生成AI版（非同期・ローディング → 結果） ──────────────
+  // ── 生成AI版（非同期・ローディング → 結果＋プロンプト） ──────────
   showLoading("pvBody-ai", "ai-color", "AI");
   generateDiagnosisAI(input).then(result => {
     const aiBody = document.getElementById("pvBody-ai");
     const aiFoot = document.getElementById("pvFoot-ai");
-    if(aiBody) aiBody.innerHTML = buildDiagnosisHTML(result);
-    if(aiFoot) aiFoot.textContent = footText + "｜AI生成（モック）";
+    if(aiBody){
+      let html = buildDiagnosisHTML(result);
+      html += buildPromptsHTML(result._prompts);
+      aiBody.innerHTML = html;
+    }
+    if(aiFoot) aiFoot.textContent = footText + "｜Gemini API生成";
   });
 
   // ── RAG版（非同期・ローディング → 結果＋参照根拠） ────────

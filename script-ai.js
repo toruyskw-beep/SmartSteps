@@ -180,13 +180,15 @@ async function generateDiagnosisAI(input){
 
   try{
     const text   = await callGeminiAPI(systemPrompt, userPrompt);
-    return parseGeminiResponse(text, input);
+    const result = parseGeminiResponse(text, input);
+    result._prompts = { system: systemPrompt, user: userPrompt };
+    return result;
   }catch(e){
-    // エラーを診断文形式で返す（画面にエラー内容を表示）
     return {
       red:   `⚠️ AI生成エラー：${e.message}`,
       green: [],
       blue:  "1問ごとの○×入力が必要なため、本システムでは対象外です。",
+      _prompts: { system: systemPrompt, user: userPrompt },
       _meta: { mode:"gemini", error: e.message }
     };
   }

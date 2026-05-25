@@ -263,3 +263,28 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 }
 .api-status.ok{border-color:#2f6d5b;background:#e3efe9;color:#2f6d5b}
 .api-status.ng{border-color:#b4493f;background:#f6e7e4;color:#b4493f}
+
+/* AIプロンプトパネル（生成AI版専用） */
+.prompts-panel{
+  margin:0;border:1px solid #ccc8e8;border-radius:8px;
+  background:#f4f2fc;font-size:.75rem;overflow:hidden;
+}
+.prompts-head{
+  padding:7px 12px;background:#e8e4f8;
+  font-weight:700;color:#4a3a90;font-size:.72rem;letter-spacing:.04em;
+  border-bottom:1px solid #ccc8e8;
+}
+.prompt-block{
+  padding:8px 12px;border-bottom:1px solid #ddd8f0;
+}
+.prompt-block:last-child{border-bottom:none}
+.prompt-label{
+  font-weight:700;color:#5a4ea0;margin-bottom:4px;font-size:.72rem;
+}
+.prompt-text{
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  font-size:.75rem;color:var(--ink);line-height:1.6;
+  white-space:pre-wrap;word-break:break-all;margin:0;
+  background:#fff;border:1px solid #ddd8f0;border-radius:5px;
+  padding:7px 10px;max-height:160px;overflow-y:auto;
+}
