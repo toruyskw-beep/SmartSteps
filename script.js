@@ -54,6 +54,14 @@ const UNITS = {
 const SOGO_TERM = {A:"○学期の学習がよくできています。", B:"○学期の学習がだいたいできています。", C:"○学期の学習がもう少しです。"};
 const SOGO_YEAR = {A:"○年の学習がよくできています。",   B:"○年の学習がほぼできています。",       C:"○年の学習を復習しましょう。"};
 
+// 単元別「学習のようす」テンプレート（算理社英・仕様書 4.4）
+// 各単元の評価ABCに応じて「めあて」に接尾語を付けて出力する
+const UNIT_LEARN = {
+  A:"については，よくできています。",
+  B:"については，だいたいできています。",
+  C:"について，よく復習しましょう。"
+};
+
 // 「最も到達度の低い単元」テンプレート（仕様書 5.1）
 const WORST_UNIT = {
   full:"が，とてもよくわかっています。",   // 到達度100%
@@ -130,7 +138,8 @@ function buildRed(input){
   return SOGO_TERM[input.sogo].replace("○学期", input.term);
 }
 
-// 観点ごとに最も到達度の低い単元の文（算理社英）
+// 観点ごとに最も到達度の低い単元の文（仕様書 5.1：観点別診断文で使用）
+// ※単元別「学習のようす」では使わない。観点別画面を実装する際に流用する。
 function worstUnitSentence(input){
   const valid = input.units.map((u,idx)=>({...u,idx})).filter(u=>u.grade);
   if(valid.length === 0) return null;
@@ -161,10 +170,19 @@ function buildGreen(input){
     lines.push({ord:kantenOrd, label:k, text:kantenSentence(input.subjectKey, input.grade, k, v)});
   });
 
-  // ③ 最も到達度の低い単元（算理社英のみ）
+  // ③ 単元別「学習のようす」：全単元を順に出力（算理社英のみ・仕様書 4.4）
+  //    各単元の評価ABCに応じて「めあて＋接尾語」を生成する
   if(!isKokugo(input.subjectKey)){
-    const w = worstUnitSentence(input);
-    if(w) lines.push({ord:"最低到達単元", text:w});
+    const meateList = UNITS[input.subjectKey] || [];
+    input.units.forEach((u, idx) => {
+      if(!u.grade) return;                 // 未入力の単元はスキップ
+      const meate = meateList[idx] ? meateList[idx].meate : "";
+      lines.push({
+        ord:"単元",
+        label:(meateList[idx] ? meateList[idx].name : ""),
+        text: meate + UNIT_LEARN[u.grade]
+      });
+    });
   }
   return lines;
 }
