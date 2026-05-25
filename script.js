@@ -70,7 +70,7 @@ const RANK = {A:1, B:2, C:3};
  *  }
  * ===================================================================== */
 
-const KANTEN_DB = {};   // 読み込んだ教科別マスタを保持
+const KANTEN_DB = {};   // 読み込んだ教科別マスタを保持（script-rag.js から window.KANTEN_DB で参照）
 
 async function loadKantenMaster(){
   const entries = await Promise.all(
@@ -380,17 +380,14 @@ function bindAbcButtons(){
   });
 }
 
-function render(){
-  const input = collectInput();
-  const result = generateDiagnosis(input);
-  const body = $("#pvBody");
-  body.innerHTML = "";
+// 診断文のHTML断片を組み立てる（3コンテナ共通）
+function buildDiagnosisHTML(result){
+  // 赤枠
+  let html = `<div class="frame red"><span class="ftag">総評（赤枠）</span><p>${result.red}</p></div>`;
 
-  body.insertAdjacentHTML("beforeend",
-    `<div class="frame red"><span class="ftag">総評（赤枠）</span><p>${result.red}</p></div>`);
-
+  // 緑枠
   let green;
-  if(result.green.length === 0){
+  if(!result.green || result.green.length === 0){
     green = `<p style="color:#888">観点・単元の評価を入力すると診断文が表示されます。</p>`;
   }else{
     const lines = result.green.map(l => {
@@ -400,17 +397,74 @@ function render(){
     }).join("");
     green = `<div class="multi">${lines}</div>`;
   }
-  body.insertAdjacentHTML("beforeend",
-    `<div class="frame green"><span class="ftag">学習のようす（緑枠）</span>${green}</div>`);
+  html += `<div class="frame green"><span class="ftag">学習のようす（緑枠）</span>${green}</div>`;
 
-  body.insertAdjacentHTML("beforeend",
-    `<div class="frame blue"><span class="ftag">アドバイス（青枠）</span><p>${result.blue}</p></div>`);
+  // 青枠
+  html += `<div class="frame blue"><span class="ftag">アドバイス（青枠）</span><p>${result.blue}</p></div>`;
+  return html;
+}
 
+// フッターテキスト
+function buildFootText(input){
   const label = SUBJECTS[input.subjectKey].label;
-  $("#pvFoot").textContent =
-    `${input.grade}年・${label}・${isYear(input.term) ? "年間" : input.term}` +
+  return `${input.grade}年・${label}・${isYear(input.term) ? "年間" : input.term}` +
     (isKokugo(input.subjectKey) ? "｜国語：観点別のみ" : `｜準拠：${els.junkyo.value}`) +
     (isYear(input.term) ? "｜年間は最大4要素を連結" : "");
+}
+
+// RAG参照根拠パネルのHTML
+function buildRefsHTML(refs){
+  if(!refs || refs.length === 0) return "";
+  const items = refs.map(r =>
+    `<div class="ref-item">
+       <span class="ref-key">📄 ${r.source} ／ ${r.key}</span>
+       <span class="ref-text">${r.text}</span>
+     </div>`).join("");
+  return `<div class="refs-list">${items}</div>`;
+}
+
+// ローディング表示
+function showLoading(bodyId, colorClass, label){
+  const el = document.getElementById(bodyId);
+  if(el) el.innerHTML = `<div class="pv-loading ${colorClass}"><span class="spinner"></span>${label}で生成中...</div>`;
+}
+
+function render(){
+  const input = collectInput();
+  const footText = buildFootText(input);
+
+  // ── テンプレート版（同期・即時） ──────────────────────────
+  const tmpl = generateDiagnosis(input);
+  const tmplBody = document.getElementById("pvBody-tmpl");
+  const tmplFoot = document.getElementById("pvFoot-tmpl");
+  if(tmplBody) tmplBody.innerHTML = buildDiagnosisHTML(tmpl);
+  if(tmplFoot) tmplFoot.textContent = footText;
+
+  // ── 生成AI版（非同期・ローディング → 結果） ──────────────
+  showLoading("pvBody-ai", "ai-color", "AI");
+  generateDiagnosisAI(input).then(result => {
+    const aiBody = document.getElementById("pvBody-ai");
+    const aiFoot = document.getElementById("pvFoot-ai");
+    if(aiBody) aiBody.innerHTML = buildDiagnosisHTML(result);
+    if(aiFoot) aiFoot.textContent = footText + "｜AI生成（モック）";
+  });
+
+  // ── RAG版（非同期・ローディング → 結果＋参照根拠） ────────
+  showLoading("pvBody-rag", "rag-color", "RAG");
+  const refsPanel = document.getElementById("refsPanel");
+  const refsList  = document.getElementById("refsList");
+  if(refsPanel) refsPanel.style.display = "none";
+  generateDiagnosisRAG(input).then(result => {
+    const ragBody = document.getElementById("pvBody-rag");
+    const ragFoot = document.getElementById("pvFoot-rag");
+    if(ragBody) ragBody.innerHTML = buildDiagnosisHTML(result);
+    if(ragFoot) ragFoot.textContent = footText + "｜RAG生成（モック）";
+    // 参照根拠パネルを表示
+    if(result._refs && result._refs.length > 0 && refsPanel && refsList){
+      refsList.innerHTML = buildRefsHTML(result._refs);
+      refsPanel.style.display = "";
+    }
+  });
 }
 
 // ----- イベント登録 -----
@@ -435,11 +489,14 @@ async function init(){
   try{
     await Promise.all([loadKantenMaster(), loadMeateMaster()]);
   }catch(e){
-    $("#pvBody").innerHTML =
+    document.getElementById("pvBody-tmpl").innerHTML =
       `<div class="frame red" style="margin:14px 16px"><span class="ftag">読み込みエラー</span>` +
       `<p>${e.message}<br>※ブラウザでファイルを直接開くとJSONを読めません。フォルダ内で「python3 -m http.server」等を起動し、http経由で開いてください。</p></div>`;
     return;
   }
+  // script-ai.js / script-rag.js から参照できるよう window に公開
+  window.KANTEN_DB = KANTEN_DB;
+  window.SUBJECTS  = SUBJECTS;
   buildSubjectOptions();
   els.subject.value = "sansu";
   rebuildTerms();

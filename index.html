@@ -125,18 +125,53 @@
       </div>
     </div>
 
-    <!-- RIGHT: live preview -->
-    <aside class="card preview">
-      <div class="pv-head">
-        <h2>診断文プレビュー</h2>
-        <span class="live">自動生成</span>
+    <!-- RIGHT: 3方式プレビュー縦積み -->
+    <aside class="preview-col">
+
+      <!-- テンプレート版 -->
+      <div class="card pv-card">
+        <div class="pv-head">
+          <span class="pv-icon">📋</span>
+          <h2>テンプレート版</h2>
+          <span class="live">即時生成</span>
+        </div>
+        <div id="pvBody-tmpl"></div>
+        <div class="pv-foot" id="pvFoot-tmpl"></div>
       </div>
-      <div id="pvBody"></div>
-      <div class="pv-foot" id="pvFoot"></div>
+
+      <!-- 生成AI版 -->
+      <div class="card pv-card">
+        <div class="pv-head">
+          <span class="pv-icon">🤖</span>
+          <h2>生成AI版</h2>
+          <span class="badge mock">モック</span>
+          <span class="live ai-live">AI生成</span>
+        </div>
+        <div id="pvBody-ai"></div>
+        <div class="pv-foot" id="pvFoot-ai"></div>
+      </div>
+
+      <!-- RAG版 -->
+      <div class="card pv-card">
+        <div class="pv-head">
+          <span class="pv-icon">🔍</span>
+          <h2>RAG版</h2>
+          <span class="badge mock">モック</span>
+          <span class="live rag-live">RAG生成</span>
+        </div>
+        <div id="pvBody-rag"></div>
+        <!-- 参照根拠パネル -->
+        <div class="refs-panel" id="refsPanel">
+          <div class="refs-head">📚 参照した診断文マスタ</div>
+          <div id="refsList"></div>
+        </div>
+        <div class="pv-foot" id="pvFoot-rag"></div>
+      </div>
+
     </aside>
   </div>
 </div>
 
 <script src="script.js"></script>
-</body>
-</html>
+<script src="script-ai.js"></script>
+<script src="script-rag.js"></script>

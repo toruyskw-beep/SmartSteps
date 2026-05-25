@@ -45,8 +45,8 @@ header{
   border:1px solid var(--line);border-radius:6px;padding:6px 12px;background:var(--card);
 }
 
-.layout{display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start}
-@media(max-width:980px){.layout{grid-template-columns:1fr}}
+.layout{display:grid;grid-template-columns:1fr 400px;gap:28px;align-items:start}
+@media(max-width:1020px){.layout{grid-template-columns:1fr}}
 
 .card{
   background:var(--card);border:1px solid var(--line);
@@ -139,3 +139,105 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
 .btn.ghost{background:#fff;color:var(--ink)}
 .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn.primary:hover{filter:brightness(1.05)}
+
+/* =====================================================================
+ * 3方式プレビューコンテナ
+ * ===================================================================== */
+
+/* 右カラム全体：縦積みコンテナ */
+.preview-col{
+  display:flex;flex-direction:column;gap:18px;
+  position:sticky;top:24px;
+  max-height:calc(100vh - 48px);overflow-y:auto;
+  /* スクロールバーを目立たせない */
+  scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+}
+.preview-col::-webkit-scrollbar{width:5px}
+.preview-col::-webkit-scrollbar-track{background:transparent}
+.preview-col::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+
+/* 各プレビューカード */
+.pv-card{ min-width:0 }
+
+/* カードヘッダー */
+.pv-head{
+  padding:12px 16px;border-bottom:1px solid var(--line-soft);
+  background:linear-gradient(180deg,#fbfaf6,#f6f3ec);
+  display:flex;align-items:center;gap:8px;
+}
+.pv-icon{font-size:1rem}
+.pv-head h2{font-size:.92rem;letter-spacing:.04em}
+
+/* モックバッジ */
+.badge{
+  font-size:.62rem;font-weight:700;letter-spacing:.06em;
+  padding:2px 7px;border-radius:20px;
+}
+.badge.mock{background:#f0e8d8;color:#8a6a3a;border:1px solid #d9c8a8}
+
+/* LIVE ドット */
+.live{
+  margin-left:auto;font-size:.68rem;font-weight:700;
+  display:flex;align-items:center;gap:5px;
+}
+.live::before{
+  content:"";width:7px;height:7px;border-radius:50%;
+}
+/* テンプレート版：緑 */
+.pv-head .live:not(.ai-live):not(.rag-live){color:var(--accent)}
+.pv-head .live:not(.ai-live):not(.rag-live)::before{
+  background:var(--accent);animation:pulse 2s infinite;
+}
+/* AI版：青紫 */
+.ai-live{color:#5a4ea0}
+.ai-live::before{background:#5a4ea0;animation:pulse-ai 2s infinite}
+@keyframes pulse-ai{
+  0%{box-shadow:0 0 0 0 rgba(90,78,160,.4)}
+  70%{box-shadow:0 0 0 6px rgba(90,78,160,0)}
+  100%{box-shadow:0 0 0 0 rgba(90,78,160,0)}
+}
+/* RAG版：琥珀 */
+.rag-live{color:#9a6020}
+.rag-live::before{background:#c08a2d;animation:pulse-rag 2s infinite}
+@keyframes pulse-rag{
+  0%{box-shadow:0 0 0 0 rgba(192,138,45,.4)}
+  70%{box-shadow:0 0 0 6px rgba(192,138,45,0)}
+  100%{box-shadow:0 0 0 0 rgba(192,138,45,0)}
+}
+
+/* ローディング表示 */
+.pv-loading{
+  padding:20px 18px;text-align:center;
+  font-size:.82rem;color:var(--ink-soft);
+}
+.pv-loading .spinner{
+  display:inline-block;width:18px;height:18px;
+  border:2px solid var(--line);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;
+  vertical-align:middle;margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* AI版のスピナーは青紫 */
+.pv-loading.ai-color .spinner{border-top-color:#5a4ea0}
+/* RAG版のスピナーは琥珀 */
+.pv-loading.rag-color .spinner{border-top-color:#c08a2d}
+
+/* 参照根拠パネル（RAG版専用） */
+.refs-panel{
+  margin:0 14px 12px;border:1px solid #e8d8a8;border-radius:8px;
+  background:#fdf8ee;font-size:.75rem;overflow:hidden;
+}
+.refs-head{
+  padding:7px 12px;background:#f5eccc;
+  font-weight:700;color:#7a5c20;font-size:.72rem;letter-spacing:.04em;
+  border-bottom:1px solid #e8d8a8;
+}
+.refs-list{ padding:8px 12px }
+.ref-item{
+  padding:5px 0;border-bottom:1px dotted #e0d0a0;
+  display:flex;flex-direction:column;gap:2px;
+}
+.ref-item:last-child{border-bottom:none}
+.ref-key{color:#9a7030;font-weight:700}
+.ref-text{color:var(--ink);line-height:1.5}
