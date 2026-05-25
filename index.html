@@ -35,14 +35,8 @@
             <label class="field">
               <span class="lbl">学年</span>
               <div class="selectwrap">
-                <select id="grade">
-                  <option value="1">1年</option>
-                  <option value="2">2年</option>
-                  <option value="3">3年</option>
-                  <option value="4">4年</option>
-                  <option value="5" selected>5年</option>
-                  <option value="6">6年</option>
-                </select>
+                <!-- options are built by script.js per subject's grade range -->
+                <select id="grade"></select>
               </div>
             </label>
             <label class="field">
@@ -60,13 +54,8 @@
             <label class="field">
               <span class="lbl">教科</span>
               <div class="selectwrap">
-                <select id="subject">
-                  <option value="国語">国語</option>
-                  <option value="算数" selected>算数</option>
-                  <option value="理科">理科</option>
-                  <option value="社会">社会</option>
-                  <option value="外国語">外国語（英語）</option>
-                </select>
+                <!-- options are built by script.js from SUBJECTS -->
+                <select id="subject"></select>
               </div>
             </label>
             <label class="field">
