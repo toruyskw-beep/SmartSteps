@@ -361,7 +361,7 @@ function rebuildForm(){
   rebuildUnits();
 
   bindAbcButtons();
-  render();
+  showIdlePlaceholder();
 }
 
 function bindAbcButtons(){
@@ -374,7 +374,7 @@ function bindAbcButtons(){
         if(group.id === "sogoAbc")                  state.sogo = g;
         else if(group.dataset.kanten !== undefined) state.kanten[group.dataset.kanten] = g;
         else if(group.dataset.unit   !== undefined) state.units[+group.dataset.unit].grade = g;
-        render();
+        // 診断文生成はボタン押下時のみ。ここでは呼ばない。
       });
     });
   });
@@ -404,6 +404,22 @@ function buildDiagnosisHTML(result){
   return html;
 }
 
+// HTMLエスケープ
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ボタンが押されるまでの待機表示
+function showIdlePlaceholder(){
+  const msg = `<div class="pv-idle">評価を入力して「診断文生成」ボタンを押してください</div>`;
+  ["pvBody-tmpl","pvBody-ai","pvBody-rag"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = msg;
+  });
+  ["pvFoot-tmpl","pvFoot-ai","pvFoot-rag"].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = "";
+  });
+}
+
 // フッターテキスト
 function buildFootText(input){
   const label = SUBJECTS[input.subjectKey].label;
@@ -412,33 +428,72 @@ function buildFootText(input){
     (isYear(input.term) ? "｜年間は最大4要素を連結" : "");
 }
 
-// AIプロンプトパネルのHTML（AI版コンテナ下部に表示）
+// AIプロンプトパネル（AI版コンテナ下部）
 function buildPromptsHTML(prompts){
   if(!prompts) return "";
-  const escape = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   return `<div class="prompts-panel">
     <div class="prompts-head">💬 Gemini に渡したプロンプト</div>
     <div class="prompt-block">
       <div class="prompt-label">🔧 システムプロンプト</div>
-      <pre class="prompt-text">${escape(prompts.system)}</pre>
+      <pre class="prompt-text">${escHtml(prompts.system)}</pre>
     </div>
     <div class="prompt-block">
       <div class="prompt-label">📋 ユーザープロンプト（評価データ）</div>
-      <pre class="prompt-text">${escape(prompts.user)}</pre>
+      <pre class="prompt-text">${escHtml(prompts.user)}</pre>
     </div>
   </div>`;
 }
-function buildRefsHTML(refs){
-  if(!refs || refs.length === 0) return "";
-  const items = refs.map(r =>
-    `<div class="ref-item">
-       <span class="ref-key">📄 ${r.source} ／ ${r.key}</span>
-       <span class="ref-text">${r.text}</span>
-     </div>`).join("");
-  return `<div class="refs-panel">
-    <div class="refs-head">📚 参照した診断文マスタ</div>
-    <div class="refs-list">${items}</div>
-  </div>`;
+
+// RAGパイプライン詳細パネル（RAG版コンテナ下部）
+function buildRagDetailPanel(result){
+  let html = `<div class="rag-detail-panel"><div class="rag-detail-head">🔍 RAGパイプライン詳細</div>`;
+
+  // ① 送ったクエリテキスト
+  if(result._query){
+    html += `<div class="rag-section">
+      <div class="rag-section-label">① 送ったクエリテキスト</div>
+      <div class="rag-query-text">${escHtml(result._query)}</div>
+    </div>`;
+  }
+
+  // ② マッチした診断文マスタ
+  if(result._refs && result._refs.length > 0){
+    const items = result._refs.map(r =>
+      `<div class="ref-item">
+         <span class="ref-key">📄 ${escHtml(r.source)} ／ ${escHtml(r.key)}</span>
+         <span class="ref-text">${escHtml(r.text)}</span>
+       </div>`).join("");
+    html += `<div class="rag-section">
+      <div class="rag-section-label">② マッチした診断文マスタ</div>
+      <div class="refs-list">${items}</div>
+    </div>`;
+  }
+
+  // ③ AIに渡したプロンプト
+  if(result._prompts){
+    html += `<div class="rag-section">
+      <div class="rag-section-label">③ AI に渡したプロンプト</div>
+      <div class="prompt-block">
+        <div class="prompt-label">🔧 システムプロンプト</div>
+        <pre class="prompt-text">${escHtml(result._prompts.system)}</pre>
+      </div>
+      <div class="prompt-block">
+        <div class="prompt-label">📋 ユーザープロンプト</div>
+        <pre class="prompt-text">${escHtml(result._prompts.user)}</pre>
+      </div>
+    </div>`;
+  }
+
+  // ④ AIの生応答
+  if(result._rawResponse){
+    html += `<div class="rag-section">
+      <div class="rag-section-label">④ AI の生応答</div>
+      <pre class="prompt-text">${escHtml(result._rawResponse)}</pre>
+    </div>`;
+  }
+
+  html += `</div>`;
+  return html;
 }
 
 // ローディング表示
@@ -471,39 +526,33 @@ function render(){
     if(aiFoot) aiFoot.textContent = footText + "｜Gemini API生成";
   });
 
-  // ── RAG版（非同期・ローディング → 結果＋参照根拠） ────────
+  // ── RAG版（非同期・ローディング → 結果＋RAGパイプライン詳細） ────────
   showLoading("pvBody-rag", "rag-color", "RAG");
   generateDiagnosisRAG(input).then(result => {
     const ragBody = document.getElementById("pvBody-rag");
     const ragFoot = document.getElementById("pvFoot-rag");
     if(ragBody){
       let html = buildDiagnosisHTML(result);
-      // 参照根拠パネルを pvBody 内に追加
-      if(result._refs && result._refs.length > 0){
-        html += buildRefsHTML(result._refs);
-      }
+      html += buildRagDetailPanel(result);
       ragBody.innerHTML = html;
     }
-    if(ragFoot) ragFoot.textContent = footText + "｜RAG生成（モック）";
+    if(ragFoot) ragFoot.textContent = footText + "｜RAG + Gemini API生成";
   });
 }
 
 // ----- イベント登録 -----
-// 教科変更：フォーム全体を作り直す
+// 教科変更：フォーム全体を作り直す（診断文はリセット）
 els.subject.addEventListener("change", rebuildForm);
-// 学期制変更：学期セレクトを作り直し→単元（年間/学期で変わる）も更新
-els.termType.addEventListener("change", () => { rebuildTerms(); rebuildUnits(); bindAbcButtons(); render(); });
-// 学年変更：準拠(地域版は学年限定)と単元を作り直す
-els.grade.addEventListener("change", () => { rebuildJunkyo(); rebuildUnits(); bindAbcButtons(); render(); });
-// 学期変更：単元を作り直す
-els.term.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); render(); });
-// 準拠(教科書)変更：単元を作り直す
-els.junkyo.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); render(); });
-$("#confirmBtn").addEventListener("click", () => {
-  const r = generateDiagnosis(collectInput());
-  alert("診断文を登録しました（サンプル）。\n\n【総評】\n" + r.red +
-        "\n\n【学習のようす】\n" + r.green.map(l => (l.label?l.label+"：":"") + l.text).join("\n"));
-});
+// 学期制変更：フォーム更新のみ（診断文は生成しない）
+els.termType.addEventListener("change", () => { rebuildTerms(); rebuildUnits(); bindAbcButtons(); showIdlePlaceholder(); });
+// 学年変更：フォーム更新のみ
+els.grade.addEventListener("change", () => { rebuildJunkyo(); rebuildUnits(); bindAbcButtons(); showIdlePlaceholder(); });
+// 学期変更：フォーム更新のみ
+els.term.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); showIdlePlaceholder(); });
+// 準拠(教科書)変更：フォーム更新のみ
+els.junkyo.addEventListener("change", () => { rebuildUnits(); bindAbcButtons(); showIdlePlaceholder(); });
+// 「診断文生成」ボタン：ここで初めて全エンジンを起動
+document.getElementById("confirmBtn").addEventListener("click", render);
 
 // ----- 初期化（JSON読み込み後にフォーム構築） -----
 async function init(){
@@ -538,5 +587,7 @@ async function init(){
   els.subject.value = "sansu";
   rebuildTerms();
   rebuildForm();
+  // 初期表示はプレースホルダー
+  showIdlePlaceholder();
 }
 init();

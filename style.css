@@ -288,3 +288,33 @@ select:focus,input:focus{outline:2px solid var(--accent-soft);border-color:var(-
   background:#fff;border:1px solid #ddd8f0;border-radius:5px;
   padding:7px 10px;max-height:160px;overflow-y:auto;
 }
+
+/* 待機メッセージ */
+.pv-idle{
+  padding:24px 18px;text-align:center;
+  font-size:.84rem;color:var(--ink-soft);
+  border:1.5px dashed var(--line);border-radius:8px;
+  margin:14px;background:#faf9f5;
+}
+
+/* RAGパイプライン詳細パネル */
+.rag-detail-panel{
+  border:1px solid #d4c8a0;border-radius:8px;
+  background:#fdf9ee;font-size:.75rem;overflow:hidden;
+}
+.rag-detail-head{
+  padding:8px 12px;background:#f0e8c8;
+  font-weight:700;color:#6a4e10;font-size:.73rem;letter-spacing:.04em;
+  border-bottom:1px solid #d4c8a0;
+}
+.rag-section{
+  padding:9px 12px;border-bottom:1px solid #e8ddb8;
+}
+.rag-section:last-child{border-bottom:none}
+.rag-section-label{
+  font-weight:700;color:#8a6020;margin-bottom:5px;font-size:.72rem;
+}
+.rag-query-text{
+  background:#fff;border:1px solid #e0d4a8;border-radius:5px;
+  padding:7px 10px;color:var(--ink);line-height:1.6;font-size:.8rem;
+}
